@@ -663,23 +663,50 @@ void HelloTriangle::init_render_pass(Context &context)
  */
 VkShaderModule HelloTriangle::load_shader_module(Context &context, const char *path)
 {
-	vkb::GLSLCompiler glsl_compiler;
+	std::vector<uint32_t> spirv{};
 
-	auto buffer = vkb::fs::read_shader_binary(path);
-
-	std::string file_ext = path;
-
-	// Extract extension name from the glsl shader file
-	file_ext = file_ext.substr(file_ext.find_last_of(".") + 1);
-
-	std::vector<uint32_t> spirv;
-	std::string           info_log;
-
-	// Compile the GLSL source
-	if (!glsl_compiler.compile_to_spirv(find_shader_stage(file_ext), buffer, "main", {}, spirv, info_log))
+	// @todo: Work-in-progress sascha
+	switch (platform->get_shader_type())
 	{
-		LOGE("Failed to compile shader, Error: {}", info_log.c_str());
-		return VK_NULL_HANDLE;
+		// GLSL shaders will be compiled at runtime using shaderc
+		case vkb::ShaderType::GLSL:
+		{
+			vkb::GLSLCompiler glsl_compiler;
+
+			auto buffer = vkb::fs::read_shader_binary(path);
+
+			std::string file_ext = path;
+
+			// Extract extension name from the glsl shader file
+			file_ext = file_ext.substr(file_ext.find_last_of(".") + 1);
+
+			std::string info_log;
+
+			// Compile the GLSL source
+			if (!glsl_compiler.compile_to_spirv(find_shader_stage(file_ext), buffer, "main", {}, spirv, info_log))
+			{
+				LOGE("Failed to compile shader, Error: {}", info_log.c_str());
+				return VK_NULL_HANDLE;
+			}
+			break;
+		}
+
+		// HLSL shaders have been compiled offline using DXC, so we can directly load the SPIR-V from disk
+		case vkb::ShaderType::HLSL:
+		{
+			auto buffer = vkb::fs::read_shader_binary(std::string(path) + ".spv");
+
+			if (buffer.empty())
+			{
+				LOGE("Failed to load pre-compiled SPIR-V shader");
+				return VK_NULL_HANDLE;
+			}
+
+			spirv.resize(buffer.size() / 4);
+			memcpy(spirv.data(), buffer.data(), buffer.size());
+
+			break;
+		}
 	}
 
 	VkShaderModuleCreateInfo module_info{VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
