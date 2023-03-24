@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2022, Arm Limited and Contributors
+/* Copyright (c) 2019-2023, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -44,6 +44,8 @@ std::vector<std::string> Platform::arguments = {};
 std::string Platform::external_storage_directory = "";
 
 std::string Platform::temp_directory = "";
+
+ShaderType Platform::shader_type = ShaderType::GLSL;
 
 ExitCode Platform::initialize(const std::vector<Plugin *> &plugins = {})
 {
@@ -296,6 +298,11 @@ const std::string &Platform::get_temp_directory()
 	return temp_directory;
 }
 
+const ShaderType &Platform::get_shader_type()
+{
+	return shader_type;
+}
+
 Application &Platform::get_app()
 {
 	assert(active_app && "Application is not valid");
@@ -331,6 +338,11 @@ void Platform::set_external_storage_directory(const std::string &dir)
 void Platform::set_temp_directory(const std::string &dir)
 {
 	temp_directory = dir;
+}
+
+void Platform::set_shader_type(const ShaderType &type)
+{
+	shader_type = type;
 }
 
 std::vector<spdlog::sink_ptr> Platform::get_platform_sinks()

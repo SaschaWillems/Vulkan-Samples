@@ -71,6 +71,11 @@ const std::string get(const Type type, const std::string &file)
 
 	auto path = Platform::get_external_storage_directory() + it->second;
 
+	// @todo: Select path based on requested shader type sascha
+	if ((type == Type::Shaders) && (Platform::get_shader_type() == vkb::ShaderType::HLSL)) {
+		path = path + "hlsl/";
+	}
+
 	if (!is_directory(path))
 	{
 		create_path(Platform::get_external_storage_directory(), it->second);

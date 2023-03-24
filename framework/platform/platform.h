@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2022, Arm Limited and Contributors
+/* Copyright (c) 2019-2023, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -44,6 +44,12 @@ enum class ExitCode
 	Help,        /* App should show help */
 	Close,       /* App has been requested to close at initialization */
 	FatalError   /* App encountered an unexpected error */
+};
+
+enum class ShaderType
+{
+	GLSL,
+	HLSL
 };
 
 class Platform
@@ -95,6 +101,9 @@ class Platform
 	 */
 	static const std::string &get_temp_directory();
 
+	/** @todo */
+	static const ShaderType &get_shader_type();
+
 	/**
 	 * @return The VkInstance extension name for the platform
 	 */
@@ -119,6 +128,8 @@ class Platform
 	static void set_external_storage_directory(const std::string &dir);
 
 	static void set_temp_directory(const std::string &dir);
+
+	static void set_shader_type(const ShaderType &type);
 
 	template <class T>
 	T *get_plugin() const;
@@ -160,7 +171,7 @@ class Platform
 
 	/**
 	 * @brief Handles the creation of the window
-	 * 
+	 *
 	 * @param properties Preferred window configuration
 	 */
 	virtual void create_window(const Window::Properties &properties) = 0;
@@ -191,6 +202,8 @@ class Platform
 	static std::string external_storage_directory;
 
 	static std::string temp_directory;
+
+	static ShaderType shader_type;
 };
 
 template <class T>
