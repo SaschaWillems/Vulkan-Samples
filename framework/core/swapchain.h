@@ -46,6 +46,10 @@ struct SwapchainProperties
 class Swapchain
 {
   public:
+
+	// @todo: comment
+	static std::vector<VkSurfaceFormatKHR> custom_surface_format_priority_list;
+
 	/**
 	 * @brief Constructor to create a swapchain by changing the extent
 	 *        only and preserving the configuration from the old swapchain.

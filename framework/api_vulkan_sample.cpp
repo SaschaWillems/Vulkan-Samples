@@ -170,12 +170,7 @@ vkb::Device &ApiVulkanSample::get_device()
 
 void ApiVulkanSample::create_render_context()
 {
-	// We always want an sRGB surface to match the display.
-	// If we used a UNORM surface, we'd have to do the conversion to sRGB ourselves at the end of our fragment shaders.
-	auto surface_priority_list = std::vector<VkSurfaceFormatKHR>{{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
-	                                                             {VK_FORMAT_R8G8B8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR}};
-
-	VulkanSample::create_render_context(surface_priority_list);
+	VulkanSample::create_render_context(swapchain_surface_priority_list);
 }
 
 void ApiVulkanSample::prepare_render_context()
