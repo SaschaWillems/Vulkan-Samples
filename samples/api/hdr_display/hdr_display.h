@@ -25,18 +25,42 @@ class hdr_display : public ApiVulkanSample
 	hdr_display();
 	virtual ~hdr_display();
 
-	// Create pipeline
 	void prepare_pipelines();
 
 	// Override basic framework functionality
 	void build_command_buffers() override;
 	void render(float delta_time) override;
 	bool prepare(const vkb::ApplicationOptions &options) override;
+	virtual void on_update_ui_overlay(vkb::Drawer &drawer) override;
 
   private:
-	// Sample specific data
-	VkPipeline       sample_pipeline{};
+
+	struct Vertex
+	{
+		float pos[2];
+		float color[3];
+	};
+
+	// HDR display settings applied to the swapchain
+	float min_luminance{0.01f};
+	float max_luminance{1000.0f};
+	float max_content_light_level{2000.0f};
+	float max_frame_average_light_level{500.0f};
+
+	bool update_hdr_metadata{false};
+	bool hdr_preset{0};
+
+	std::unique_ptr<vkb::core::Buffer> gradients_vertex_buffer;
+	uint32_t                           gradient_count{0};
+
+	std::unique_ptr<vkb::core::Buffer> triangles_vertex_buffer;
+	uint32_t                           triangles_vertex_count{0};
+
+	VkPipeline       gradients_pipeline{};
+	VkPipeline       triangles_pipeline{};
 	VkPipelineLayout sample_pipeline_layout{};
+
+	void generate_triangle();
 };
 
 std::unique_ptr<vkb::VulkanSample> create_hdr_display();

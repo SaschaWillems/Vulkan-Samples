@@ -49,6 +49,7 @@ class Swapchain
 
 	// @todo: comment
 	static std::vector<VkSurfaceFormatKHR> custom_surface_format_priority_list;
+	static void                           *create_info_pNext;
 
 	/**
 	 * @brief Constructor to create a swapchain by changing the extent

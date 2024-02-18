@@ -26,5 +26,6 @@ add_sample(
     NAME "hdr_display"
     DESCRIPTION "Using HDR display modes"
     SHADER_FILES_GLSL
-        "triangle.vert"
-        "triangle.frag")
+        "hdr_display/triangle.vert"
+        "hdr_display/triangle.frag"
+        "hdr_display/gradient.frag")

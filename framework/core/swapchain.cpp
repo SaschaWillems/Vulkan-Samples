@@ -277,6 +277,7 @@ inline VkImageUsageFlags composite_image_flags(std::set<VkImageUsageFlagBits> &i
 }        // namespace
 
 std::vector<VkSurfaceFormatKHR> Swapchain::custom_surface_format_priority_list;
+void                           *Swapchain::create_info_pNext{nullptr};
 
 Swapchain::Swapchain(Swapchain &old_swapchain, const VkExtent2D &extent) :
     Swapchain{old_swapchain,
@@ -414,6 +415,7 @@ Swapchain::Swapchain(Swapchain                             &old_swapchain,
 	create_info.preTransform     = properties.pre_transform;
 	create_info.compositeAlpha   = properties.composite_alpha;
 	create_info.oldSwapchain     = properties.old_swapchain;
+	create_info.pNext            = create_info_pNext;
 	create_info.surface          = surface;
 
 	VkResult result = vkCreateSwapchainKHR(device.get_handle(), &create_info, nullptr, &handle);
