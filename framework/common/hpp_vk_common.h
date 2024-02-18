@@ -112,7 +112,7 @@ inline void image_layout_transition(vk::CommandBuffer command_buffer,
                                     vk::ImageLayout   old_layout,
                                     vk::ImageLayout   new_layout)
 {
-	vkb::image_layout_transition(command_buffer,
+	vkb::image_layout_transition(static_cast<VkCommandBuffer>(command_buffer),
 	                             static_cast<VkImage>(image),
 	                             static_cast<VkImageLayout>(old_layout),
 	                             static_cast<VkImageLayout>(new_layout));
@@ -124,11 +124,32 @@ inline void image_layout_transition(vk::CommandBuffer         command_buffer,
                                     vk::ImageLayout           new_layout,
                                     vk::ImageSubresourceRange subresource_range)
 {
-	vkb::image_layout_transition(command_buffer,
+	vkb::image_layout_transition(static_cast<VkCommandBuffer>(command_buffer),
 	                             static_cast<VkImage>(image),
 	                             static_cast<VkImageLayout>(old_layout),
 	                             static_cast<VkImageLayout>(new_layout),
 	                             static_cast<VkImageSubresourceRange>(subresource_range));
+}
+
+inline void image_layout_transition(vk::CommandBuffer                command_buffer,
+                                    vk::Image                        image,
+                                    vk::PipelineStageFlags           src_stage_mask,
+                                    vk::PipelineStageFlags           dst_stage_mask,
+                                    vk::AccessFlags                  src_access_mask,
+                                    vk::AccessFlags                  dst_access_mask,
+                                    vk::ImageLayout                  old_layout,
+                                    vk::ImageLayout                  new_layout,
+                                    vk::ImageSubresourceRange const &subresource_range)
+{
+	vkb::image_layout_transition(static_cast<VkCommandBuffer>(command_buffer),
+	                             static_cast<VkImage>(image),
+	                             static_cast<VkPipelineStageFlags>(src_stage_mask),
+	                             static_cast<VkPipelineStageFlags>(dst_stage_mask),
+	                             static_cast<VkAccessFlags>(src_access_mask),
+	                             static_cast<VkAccessFlags>(dst_access_mask),
+	                             static_cast<VkImageLayout>(old_layout),
+	                             static_cast<VkImageLayout>(new_layout),
+	                             static_cast<VkImageSubresourceRange const &>(subresource_range));
 }
 
 inline vk::SurfaceFormatKHR select_surface_format(vk::PhysicalDevice             gpu,
@@ -252,6 +273,15 @@ inline vk::ImageView create_image_view(vk::Device           device,
 	image_view_create_info.subresourceRange.baseArrayLayer = base_array_layer;
 	image_view_create_info.subresourceRange.layerCount     = layer_count;
 	return device.createImageView(image_view_create_info);
+}
+
+inline vk::QueryPool create_query_pool(vk::Device device, vk::QueryType query_type, uint32_t query_count, vk::QueryPipelineStatisticFlags pipeline_statistics = {})
+{
+	vk::QueryPoolCreateInfo query_pool_create_info;
+	query_pool_create_info.queryType          = query_type;
+	query_pool_create_info.queryCount         = query_count;
+	query_pool_create_info.pipelineStatistics = pipeline_statistics;
+	return device.createQueryPool(query_pool_create_info);
 }
 
 inline vk::Sampler create_sampler(vk::Device device, vk::Filter filter, vk::SamplerAddressMode sampler_address_mode, float max_anisotropy, float max_LOD)
