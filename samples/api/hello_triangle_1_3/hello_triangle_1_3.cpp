@@ -359,27 +359,6 @@ void HelloTriangleVulkan13::init_device(Context                         &context
 }
 
 /**
- * @brief Initializes per frame data.
- * @param context A newly created Vulkan context.
- * @param per_frame The data of a frame.
- */
-void HelloTriangleVulkan13::init_per_frame(Context &context, PerFrame &per_frame)
-{
-	VkFenceCreateInfo info{VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
-	info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-	VK_CHECK(vkCreateFence(context.device, &info, nullptr, &per_frame.queue_submit_fence));
-
-	VkCommandBufferAllocateInfo cmd_buf_info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-	cmd_buf_info.commandPool        = context.command_pool;
-	cmd_buf_info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	cmd_buf_info.commandBufferCount = 1;
-	VK_CHECK(vkAllocateCommandBuffers(context.device, &cmd_buf_info, &per_frame.primary_command_buffer));
-
-	per_frame.device      = context.device;
-	per_frame.queue_index = context.graphics_queue_index;
-}
-
-/**
  * @brief Tears down the frame data.
  * @param context The Vulkan context.
  * @param per_frame The data of a frame.
@@ -410,8 +389,6 @@ void HelloTriangleVulkan13::teardown_per_frame(Context &context, PerFrame &per_f
 	per_frame.primary_command_buffer      = VK_NULL_HANDLE;
 	per_frame.swapchain_acquire_semaphore = VK_NULL_HANDLE;
 	per_frame.swapchain_release_semaphore = VK_NULL_HANDLE;
-	per_frame.device                      = VK_NULL_HANDLE;
-	per_frame.queue_index                 = -1;
 }
 
 /**
@@ -428,8 +405,8 @@ void HelloTriangleVulkan13::init_swapchain(Context &context)
 	VkExtent2D swapchain_size;
 	if (surface_properties.currentExtent.width == 0xFFFFFFFF)
 	{
-		swapchain_size.width  = context.swapchain_dimensions.width;
-		swapchain_size.height = context.swapchain_dimensions.height;
+		swapchain_size.width  = context.swapchain_properties.width;
+		swapchain_size.height = context.swapchain_properties.height;
 	}
 	else
 	{
@@ -519,7 +496,7 @@ void HelloTriangleVulkan13::init_swapchain(Context &context)
 		vkDestroySwapchainKHR(context.device, old_swapchain, nullptr);
 	}
 
-	context.swapchain_dimensions = {swapchain_size.width, swapchain_size.height, format.format};
+	context.swapchain_properties = {swapchain_size.width, swapchain_size.height, format.format};
 
 	uint32_t image_count;
 	VK_CHECK(vkGetSwapchainImagesKHR(context.device, context.swapchain, &image_count, nullptr));
@@ -536,15 +513,20 @@ void HelloTriangleVulkan13::init_swapchain(Context &context)
 
 	for (size_t i = 0; i < image_count; i++)
 	{
-		init_per_frame(context, context.per_frame[i]);
-	}
+		VkFenceCreateInfo info{VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+		info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+		VK_CHECK(vkCreateFence(context.device, &info, nullptr, &context.per_frame[i].queue_submit_fence));
 
-	for (size_t i = 0; i < image_count; i++)
-	{
+		VkCommandBufferAllocateInfo cmd_buf_info{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+		cmd_buf_info.commandPool        = context.command_pool;
+		cmd_buf_info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		cmd_buf_info.commandBufferCount = 1;
+		VK_CHECK(vkAllocateCommandBuffers(context.device, &cmd_buf_info, &context.per_frame[i].primary_command_buffer));
+
 		// Create an image view which we can render into.
 		VkImageViewCreateInfo view_info{VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
 		view_info.viewType                    = VK_IMAGE_VIEW_TYPE_2D;
-		view_info.format                      = context.swapchain_dimensions.format;
+		view_info.format                      = context.swapchain_properties.format;
 		view_info.image                       = swapchain_images[i];
 		view_info.subresourceRange.levelCount = 1;
 		view_info.subresourceRange.layerCount = 1;
@@ -665,6 +647,11 @@ void HelloTriangleVulkan13::init_pipeline(Context &context)
 	shader_stages[1].module = load_shader_module(context, "triangle.frag", VK_SHADER_STAGE_FRAGMENT_BIT);
 	shader_stages[1].pName  = "main";
 
+	// New create info to define color, depth and stencil attachments at pipeline create time
+	VkPipelineRenderingCreateInfo pipeline_rendering_createInfo{VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR};
+	pipeline_rendering_createInfo.colorAttachmentCount    = 1;
+	pipeline_rendering_createInfo.pColorAttachmentFormats = &context.swapchain_properties.format;
+
 	VkGraphicsPipelineCreateInfo pipe{VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
 	pipe.stageCount          = vkb::to_u32(shader_stages.size());
 	pipe.pStages             = shader_stages.data();
@@ -676,17 +663,8 @@ void HelloTriangleVulkan13::init_pipeline(Context &context)
 	pipe.pViewportState      = &viewport;
 	pipe.pDepthStencilState  = &depth_stencil;
 	pipe.pDynamicState       = &dynamic;
-
-	// New create info to define color, depth and stencil attachments at pipeline create time
-	VkPipelineRenderingCreateInfo pipeline_rendering_createInfo{VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR};
-	pipeline_rendering_createInfo.colorAttachmentCount    = 1;
-	pipeline_rendering_createInfo.pColorAttachmentFormats = &context.swapchain_dimensions.format;
-
-	// Chain into the pipeline create info
-	pipe.pNext = &pipeline_rendering_createInfo;
-
-	// We need to specify the pipeline layout up front as well
-	pipe.layout = context.pipeline_layout;
+	pipe.layout              = context.pipeline_layout;
+	pipe.pNext               = &pipeline_rendering_createInfo;
 
 	VK_CHECK(vkCreateGraphicsPipelines(context.device, VK_NULL_HANDLE, 1, &pipe, nullptr, &context.pipeline));
 
@@ -739,10 +717,10 @@ VkResult HelloTriangleVulkan13::acquire_next_image(Context &context, uint32_t *i
 
 	// @todo
 
-	//if (context.per_frame[*image].primary_command_pool != VK_NULL_HANDLE)
+	// if (context.per_frame[*image].primary_command_pool != VK_NULL_HANDLE)
 	//{
 	//	vkResetCommandPool(context.device, context.per_frame[*image].primary_command_pool, 0);
-	//}
+	// }
 
 	// Recycle the old semaphore back into the semaphore manager.
 	VkSemaphore old_semaphore = context.per_frame[*image].swapchain_acquire_semaphore;
@@ -783,7 +761,7 @@ void HelloTriangleVulkan13::render(Context &context, uint32_t swapchain_index)
 	color_attachment_info.clearValue.color = {0.01f, 0.01f, 0.033f, 1.0f};
 
 	VkRenderingInfoKHR rendering_info{VK_STRUCTURE_TYPE_RENDERING_INFO_KHR};
-	rendering_info.renderArea           = {0, 0, context.swapchain_dimensions.width, context.swapchain_dimensions.height};
+	rendering_info.renderArea           = {0, 0, context.swapchain_properties.width, context.swapchain_properties.height};
 	rendering_info.layerCount           = 1;
 	rendering_info.colorAttachmentCount = 1;
 	rendering_info.pColorAttachments    = &color_attachment_info;
@@ -793,10 +771,10 @@ void HelloTriangleVulkan13::render(Context &context, uint32_t swapchain_index)
 	// Bind the graphics pipeline.
 	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, context.pipeline);
 
-	VkViewport viewport{0.0f, 0.0f, static_cast<float>(context.swapchain_dimensions.width), static_cast<float>(context.swapchain_dimensions.height), 0.0f, 1.0f};
+	VkViewport viewport{0.0f, 0.0f, static_cast<float>(context.swapchain_properties.width), static_cast<float>(context.swapchain_properties.height), 0.0f, 1.0f};
 	vkCmdSetViewport(cmd, 0, 1, &viewport);
 
-	VkRect2D scissor{0, 0, context.swapchain_dimensions.width, context.swapchain_dimensions.height};
+	VkRect2D scissor{0, 0, context.swapchain_properties.width, context.swapchain_properties.height};
 	vkCmdSetScissor(cmd, 0, 1, &scissor);
 
 	// Draw three vertices with one instance.
@@ -899,12 +877,13 @@ bool HelloTriangleVulkan13::prepare(const vkb::ApplicationOptions &options)
 
 	init_instance(context, {VK_KHR_SURFACE_EXTENSION_NAME}, {});
 
+	// Why is this required?
 	vk_instance = std::make_unique<vkb::Instance>(context.instance);
 
 	context.surface                     = options.window->create_surface(*vk_instance);
 	auto &extent                        = options.window->get_extent();
-	context.swapchain_dimensions.width  = extent.width;
-	context.swapchain_dimensions.height = extent.height;
+	context.swapchain_properties.width  = extent.width;
+	context.swapchain_properties.height = extent.height;
 
 	if (!context.surface)
 	{
@@ -930,7 +909,7 @@ void HelloTriangleVulkan13::update(float delta_time)
 	// Handle outdated error in acquire.
 	if (res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-		resize(context.swapchain_dimensions.width, context.swapchain_dimensions.height);
+		resize(context.swapchain_properties.width, context.swapchain_properties.height);
 		res = acquire_next_image(context, &index);
 	}
 
@@ -955,7 +934,7 @@ void HelloTriangleVulkan13::update(float delta_time)
 	// Handle Outdated error in present.
 	if (res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-		resize(context.swapchain_dimensions.width, context.swapchain_dimensions.height);
+		resize(context.swapchain_properties.width, context.swapchain_properties.height);
 	}
 	else if (res != VK_SUCCESS)
 	{
@@ -974,8 +953,8 @@ bool HelloTriangleVulkan13::resize(const uint32_t, const uint32_t)
 	VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context.gpu, context.surface, &surface_properties));
 
 	// Only rebuild the swapchain if the dimensions have changed
-	if (surface_properties.currentExtent.width == context.swapchain_dimensions.width &&
-	    surface_properties.currentExtent.height == context.swapchain_dimensions.height)
+	if (surface_properties.currentExtent.width == context.swapchain_properties.width &&
+	    surface_properties.currentExtent.height == context.swapchain_properties.height)
 	{
 		return false;
 	}

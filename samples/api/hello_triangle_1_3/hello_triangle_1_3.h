@@ -31,7 +31,7 @@ class HelloTriangleVulkan13 : public vkb::Application
 	 * @brief Swapchain state
 	 */
 	// @todo: rename
-	struct SwapchainDimensions
+	struct SwapchainProperties
 	{
 		uint32_t width  = 0;
 		uint32_t height = 0;
@@ -41,14 +41,13 @@ class HelloTriangleVulkan13 : public vkb::Application
 	/**
 	 * @brief Per-frame data
 	 */
+	// @todo: rename
 	struct PerFrame
 	{
-		VkDevice        device                      = VK_NULL_HANDLE;
 		VkFence         queue_submit_fence          = VK_NULL_HANDLE;
 		VkCommandBuffer primary_command_buffer      = VK_NULL_HANDLE;
 		VkSemaphore     swapchain_acquire_semaphore = VK_NULL_HANDLE;
 		VkSemaphore     swapchain_release_semaphore = VK_NULL_HANDLE;
-		int32_t         queue_index                 = 0;
 	};
 
 	/**
@@ -70,7 +69,7 @@ class HelloTriangleVulkan13 : public vkb::Application
 		VkDebugReportCallbackEXT debug_callback        = VK_NULL_HANDLE;
 		std::vector<VkSemaphore> recycled_semaphores   = {};
 		std::vector<PerFrame>    per_frame             = {};
-		SwapchainDimensions      swapchain_dimensions  = {};
+		SwapchainProperties      swapchain_properties  = {};
 	};
 
   public:
@@ -90,16 +89,12 @@ class HelloTriangleVulkan13 : public vkb::Application
 	bool validate_layers(const std::vector<const char *>      &required,
 	                     const std::vector<VkLayerProperties> &available);
 
-	VkShaderStageFlagBits find_shader_stage(const std::string &ext);
-
 	void init_instance(Context                         &context,
 	                   const std::vector<const char *> &required_instance_extensions,
 	                   const std::vector<const char *> &required_validation_layers);
 
 	void init_device(Context                         &context,
 	                 const std::vector<const char *> &required_device_extensions);
-
-	void init_per_frame(Context &context, PerFrame &per_frame);
 
 	void teardown_per_frame(Context &context, PerFrame &per_frame);
 
