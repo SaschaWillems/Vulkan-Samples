@@ -30,7 +30,6 @@ class HelloTriangleVulkan13 : public vkb::Application
 	/**
 	 * @brief Swapchain state
 	 */
-	// @todo: rename
 	struct SwapchainProperties
 	{
 		uint32_t width  = 0;

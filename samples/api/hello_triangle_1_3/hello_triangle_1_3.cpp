@@ -476,6 +476,9 @@ void HelloTriangleVulkan13::init_swapchain(Context &context)
 
 	VK_CHECK(vkCreateSwapchainKHR(context.device, &info, nullptr, &context.swapchain));
 
+	uint32_t image_count;
+	VK_CHECK(vkGetSwapchainImagesKHR(context.device, old_swapchain, &image_count, nullptr));
+
 	if (old_swapchain != VK_NULL_HANDLE)
 	{
 		for (VkImageView image_view : context.swapchain_image_views)
@@ -483,8 +486,6 @@ void HelloTriangleVulkan13::init_swapchain(Context &context)
 			vkDestroyImageView(context.device, image_view, nullptr);
 		}
 
-		uint32_t image_count;
-		VK_CHECK(vkGetSwapchainImagesKHR(context.device, old_swapchain, &image_count, nullptr));
 
 		for (size_t i = 0; i < image_count; i++)
 		{
@@ -498,17 +499,12 @@ void HelloTriangleVulkan13::init_swapchain(Context &context)
 
 	context.swapchain_properties = {swapchain_size.width, swapchain_size.height, format.format};
 
-	uint32_t image_count;
-	VK_CHECK(vkGetSwapchainImagesKHR(context.device, context.swapchain, &image_count, nullptr));
-
-	/// The swapchain images.
 	std::vector<VkImage> swapchain_images(image_count);
 	VK_CHECK(vkGetSwapchainImagesKHR(context.device, context.swapchain, &image_count, swapchain_images.data()));
 
 	// Initialize per-frame resources.
 	// Every swapchain image has its own command pool and fence manager.
 	// This makes it very easy to keep track of when we can reset command buffers and such.
-	context.per_frame.clear();
 	context.per_frame.resize(image_count);
 
 	for (size_t i = 0; i < image_count; i++)
@@ -648,7 +644,7 @@ void HelloTriangleVulkan13::init_pipeline(Context &context)
 	shader_stages[1].pName  = "main";
 
 	// New create info to define color, depth and stencil attachments at pipeline create time
-	VkPipelineRenderingCreateInfo pipeline_rendering_createInfo{VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR};
+	VkPipelineRenderingCreateInfo pipeline_rendering_createInfo{VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
 	pipeline_rendering_createInfo.colorAttachmentCount    = 1;
 	pipeline_rendering_createInfo.pColorAttachmentFormats = &context.swapchain_properties.format;
 
@@ -753,14 +749,14 @@ void HelloTriangleVulkan13::render(Context &context, uint32_t swapchain_index)
 	vkBeginCommandBuffer(cmd, &begin_info);
 
 	// New structures are used to define the attachments used in dynamic rendering
-	VkRenderingAttachmentInfo color_attachment_info{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR};
+	VkRenderingAttachmentInfo color_attachment_info{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
 	color_attachment_info.imageView        = context.swapchain_image_views[swapchain_index];
 	color_attachment_info.imageLayout      = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 	color_attachment_info.loadOp           = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	color_attachment_info.storeOp          = VK_ATTACHMENT_STORE_OP_STORE;
 	color_attachment_info.clearValue.color = {0.01f, 0.01f, 0.033f, 1.0f};
 
-	VkRenderingInfoKHR rendering_info{VK_STRUCTURE_TYPE_RENDERING_INFO_KHR};
+	VkRenderingInfoKHR rendering_info{VK_STRUCTURE_TYPE_RENDERING_INFO};
 	rendering_info.renderArea           = {0, 0, context.swapchain_properties.width, context.swapchain_properties.height};
 	rendering_info.layerCount           = 1;
 	rendering_info.colorAttachmentCount = 1;
