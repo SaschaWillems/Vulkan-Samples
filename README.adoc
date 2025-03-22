@@ -1,5 +1,5 @@
 ////
-- Copyright (c) 2019-2024, Arm Limited and Contributors
+- Copyright (c) 2019-2025, Arm Limited and Contributors
 -
 - SPDX-License-Identifier: Apache-2.0
 -
@@ -36,7 +36,8 @@ endif::[]
 
 The Vulkan Samples is collection of resources to help you develop optimized Vulkan applications.
 
-If you are new to Vulkan the xref:samples/api/README.adoc[API samples] are the right place to start.
+If you are new to Vulkan, refer to xref:NAVIGATE.adoc[this document] on how to navigate the samples and where to start.
+
 Additionally you may find the following links useful:
 
 ifdef::site-gen-antora[]
