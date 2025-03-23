@@ -35,10 +35,16 @@ While all samples use C{pp} as a programming language, most of them use the Vulk
 
 == Navigating the samples
 
-The xref:../samples/api/README.adoc[API samples] show the basic usage of Vulkan. If you are on a newer device that supports Vulkan 1.3 start with the xref:../samples/api/hello_triangle_1_3/README.adoc[Vulkan 1.3 hello triangle sample]. This shows how to use Vulkan in a more modern way with functionality like dynamic rendering (replacing render passes). If you're on an older device, a good starting point is the xref:../samples/api/hello_triangle/README.adoc[Vulkan 1.0 hello triangle sample]. Both samples teach how to get your first triangle on the screen.
+=== Starting out
 
-Most Vulkan applications are going to use textures at some point, so a good next step would be looking at the xref:../samples/api/texture_loading/README.adoc[texture loading] and xref:../samples/api/texture_mipmap_generation/README.adoc[texture mip map generation] samples.
+The xref:../samples/api/README.adoc[API samples] show the basic usage of Vulkan. If you are on a newer device that supports Vulkan 1.3, start with the xref:../samples/api/hello_triangle_1_3/README.adoc[Vulkan 1.3 hello triangle sample]. This shows how to use Vulkan in a more modern way with functionality like dynamic rendering to replace render passes. If you're on an older device, a good starting point is the xref:../samples/api/hello_triangle/README.adoc[Vulkan 1.0 hello triangle sample]. Both samples teach how to get your first triangle on the screen.
 
-If you're interested in doing compute shaders, which are mandatory in Vulkan, the xref:../samples/api/compute_nbody/README.adoc[compute n-body] sample is a good place to start with. This one shows how to combine compute with graphics and how to properly synchronize between these two parts of the graphics pipeline.
+As most Vulkan applications are going to use textures at some point, so a good next step would be looking at the xref:../samples/api/texture_loading/README.adoc[texture loading] and xref:../samples/api/texture_mipmap_generation/README.adoc[texture mip map generation] samples.
 
 // @todo: next step performance samples, mention high-level framework
+
+=== Compute shading
+
+If you're interested in doing compute shaders, the xref:../samples/api/compute_nbody/README.adoc[compute n-body] sample is a good place to start with. This one shows how to combine compute with graphics and how to properly synchronize between these two parts of the graphics pipeline. As more advanced use-case, asynchronous compute let's you overlap graphics and compute workloads on some devices to improve performance. This is demonstrated in the xref:../samples/performance/asnyc_compute/README.adoc[async compute sample].
+
+=== Hardware accelerated ray tracing
