@@ -43,8 +43,14 @@ As most Vulkan applications are going to use textures at some point, so a good n
 
 // @todo: next step performance samples, mention high-level framework
 
+=== Returning to Vulkan
+
+A lot has changed since the initial Vulkan 1.0 release. The api evolved and new features that e.g. generally improve the api have been introduced. On such feature is dynamic rendering to replace the old render pass interface for which we have a xref:../samples/api/dynamic_rendering/README.adoc[a basic sample] and xref:../samples/api/dynamic_rendering_local_read/README.adoc[another sample] that shows how to use local reads to replace sub passes with input attachments.
+
+Another advancement is dynamic state to make pipeline creation more flexible. Multiple samples demonstrates xref:../samples/api/extended_dynamic_state2/README.adoc[like this one] demonstrate that.
+
 === Compute shading
 
 If you're interested in doing compute shaders, the xref:../samples/api/compute_nbody/README.adoc[compute n-body] sample is a good place to start with. This one shows how to combine compute with graphics and how to properly synchronize between these two parts of the graphics pipeline. As more advanced use-case, asynchronous compute let's you overlap graphics and compute workloads on some devices to improve performance. This is demonstrated in the xref:../samples/performance/asnyc_compute/README.adoc[async compute sample].
 
-=== Hardware accelerated ray tracing
+// === Hardware accelerated ray tracing
