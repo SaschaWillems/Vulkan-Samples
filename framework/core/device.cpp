@@ -193,7 +193,7 @@ Device::Device(PhysicalDevice                        &gpu,
 
 	prepare_memory_allocator();
 
-	command_pool = std::make_unique<CommandPool>(*this, get_queue_by_flags(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0).get_family_index());
+	command_pool = std::make_unique<vkb::core::CommandPoolC>(*this, get_queue_by_flags(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0).get_family_index());
 	fence_pool   = std::make_unique<FencePool>(*this);
 }
 
@@ -224,7 +224,7 @@ bool Device::is_extension_supported(const std::string &requested_extension) cons
 
 bool Device::is_enabled(const char *extension) const
 {
-	return std::find_if(enabled_extensions.begin(), enabled_extensions.end(), [extension](const char *enabled_extension) { return strcmp(extension, enabled_extension) == 0; }) != enabled_extensions.end();
+	return std::ranges::find_if(enabled_extensions, [extension](const char *enabled_extension) { return strcmp(extension, enabled_extension) == 0; }) != enabled_extensions.end();
 }
 
 const PhysicalDevice &Device::get_gpu() const
@@ -515,7 +515,7 @@ void Device::flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue,
 	}
 }
 
-CommandPool &Device::get_command_pool() const
+vkb::core::CommandPoolC &Device::get_command_pool() const
 {
 	return *command_pool;
 }
@@ -532,7 +532,7 @@ void Device::create_internal_fence_pool()
 
 void Device::create_internal_command_pool()
 {
-	command_pool = std::make_unique<CommandPool>(*this, get_queue_by_flags(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0).get_family_index());
+	command_pool = std::make_unique<vkb::core::CommandPoolC>(*this, get_queue_by_flags(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0).get_family_index());
 }
 
 void Device::prepare_memory_allocator()

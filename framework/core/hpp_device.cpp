@@ -17,7 +17,7 @@
 
 #include "core/hpp_device.h"
 #include "core/buffer.h"
-#include "core/hpp_command_pool.h"
+#include "core/command_pool.h"
 #include "core/hpp_physical_device.h"
 #include "core/hpp_queue.h"
 
@@ -172,7 +172,7 @@ HPPDevice::HPPDevice(vkb::core::HPPPhysicalDevice               &gpu,
 
 	vkb::allocated::init(*this);
 
-	command_pool = std::make_unique<vkb::core::HPPCommandPool>(
+	command_pool = std::make_unique<vkb::core::CommandPoolCpp>(
 	    *this, get_queue_by_flags(vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute, 0).get_family_index());
 	fence_pool = std::make_unique<vkb::HPPFencePool>(*this);
 }
@@ -199,9 +199,8 @@ bool HPPDevice::is_extension_supported(std::string const &requested_extension) c
 
 bool HPPDevice::is_enabled(std::string const &extension) const
 {
-	return std::find_if(enabled_extensions.begin(),
-	                    enabled_extensions.end(),
-	                    [extension](const char *enabled_extension) { return extension == enabled_extension; }) != enabled_extensions.end();
+	return std::ranges::find_if(enabled_extensions,
+	                            [extension](const char *enabled_extension) { return extension == enabled_extension; }) != enabled_extensions.end();
 }
 
 vkb::core::HPPPhysicalDevice const &HPPDevice::get_gpu() const
@@ -408,7 +407,7 @@ void HPPDevice::flush_command_buffer(vk::CommandBuffer command_buffer, vk::Queue
 	}
 }
 
-vkb::core::HPPCommandPool &HPPDevice::get_command_pool()
+vkb::core::CommandPoolCpp &HPPDevice::get_command_pool()
 {
 	return *command_pool;
 }

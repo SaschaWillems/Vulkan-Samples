@@ -35,35 +35,41 @@ namespace vkb
 namespace
 {
 #ifdef USE_VALIDATION_LAYERS
-VKAPI_ATTR VkBool32 VKAPI_CALL debug_utils_messenger_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type,
-                                                              const VkDebugUtilsMessengerCallbackDataEXT *callback_data,
-                                                              void                                       *user_data)
+VKAPI_ATTR vk::Bool32 VKAPI_CALL debug_utils_messenger_callback(vk::DebugUtilsMessageSeverityFlagBitsEXT      message_severity,
+                                                                vk::DebugUtilsMessageTypeFlagsEXT             message_type,
+                                                                const vk::DebugUtilsMessengerCallbackDataEXT *callback_data,
+                                                                void                                         *user_data)
 {
 	// Log debug message
-	if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+	if (message_severity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)
 	{
 		LOGW("{} - {}: {}", callback_data->messageIdNumber, callback_data->pMessageIdName, callback_data->pMessage);
 	}
-	else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+	else if (message_severity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eError)
 	{
 		LOGE("{} - {}: {}", callback_data->messageIdNumber, callback_data->pMessageIdName, callback_data->pMessage);
 	}
 	return VK_FALSE;
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT /*type*/,
-                                                     uint64_t /*object*/, size_t /*location*/, int32_t /*message_code*/,
-                                                     const char *layer_prefix, const char *message, void * /*user_data*/)
+static VKAPI_ATTR vk::Bool32 VKAPI_CALL debug_callback(vk::DebugReportFlagsEXT flags,
+                                                       vk::DebugReportObjectTypeEXT /*type*/,
+                                                       uint64_t /*object*/,
+                                                       size_t /*location*/,
+                                                       int32_t /*message_code*/,
+                                                       const char *layer_prefix,
+                                                       const char *message,
+                                                       void * /*user_data*/)
 {
-	if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
+	if (flags & vk::DebugReportFlagBitsEXT::eError)
 	{
 		LOGE("{}: {}", layer_prefix, message);
 	}
-	else if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
+	else if (flags & vk::DebugReportFlagBitsEXT::eWarning)
 	{
 		LOGW("{}: {}", layer_prefix, message);
 	}
-	else if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
+	else if (flags & vk::DebugReportFlagBitsEXT::ePerformanceWarning)
 	{
 		LOGW("{}: {}", layer_prefix, message);
 	}
@@ -112,15 +118,13 @@ bool enable_extension(const char                                 *requested_exte
                       std::vector<const char *>                  &enabled_extensions)
 {
 	bool is_available =
-	    std::any_of(available_extensions.begin(),
-	                available_extensions.end(),
-	                [&requested_extension](auto const &available_extension) { return strcmp(requested_extension, available_extension.extensionName) == 0; });
+	    std::ranges::any_of(available_extensions,
+	                        [&requested_extension](auto const &available_extension) { return strcmp(requested_extension, available_extension.extensionName) == 0; });
 	if (is_available)
 	{
 		bool is_already_enabled =
-		    std::any_of(enabled_extensions.begin(),
-		                enabled_extensions.end(),
-		                [&requested_extension](auto const &enabled_extension) { return strcmp(requested_extension, enabled_extension) == 0; });
+		    std::ranges::any_of(enabled_extensions,
+		                        [&requested_extension](auto const &enabled_extension) { return strcmp(requested_extension, enabled_extension) == 0; });
 		if (!is_already_enabled)
 		{
 			LOGI("Extension {} available, enabling it", requested_extension);
@@ -140,15 +144,13 @@ bool enable_layer(const char                             *requested_layer,
                   std::vector<const char *>              &enabled_layers)
 {
 	bool is_available =
-	    std::any_of(available_layers.begin(),
-	                available_layers.end(),
-	                [&requested_layer](auto const &available_layer) { return strcmp(requested_layer, available_layer.layerName) == 0; });
+	    std::ranges::any_of(available_layers,
+	                        [&requested_layer](auto const &available_layer) { return strcmp(requested_layer, available_layer.layerName) == 0; });
 	if (is_available)
 	{
 		bool is_already_enabled =
-		    std::any_of(enabled_layers.begin(),
-		                enabled_layers.end(),
-		                [&requested_layer](auto const &enabled_layer) { return strcmp(requested_layer, enabled_layer) == 0; });
+		    std::ranges::any_of(enabled_layers,
+		                        [&requested_layer](auto const &enabled_layer) { return strcmp(requested_layer, enabled_layer) == 0; });
 		if (!is_already_enabled)
 		{
 			LOGI("Layer {} available, enabling it", requested_layer);
@@ -446,9 +448,8 @@ vkb::core::HPPPhysicalDevice &HPPInstance::get_suitable_gpu(vk::SurfaceKHR surfa
 
 bool HPPInstance::is_enabled(const char *extension) const
 {
-	return std::find_if(enabled_extensions.begin(),
-	                    enabled_extensions.end(),
-	                    [extension](const char *enabled_extension) { return strcmp(extension, enabled_extension) == 0; }) != enabled_extensions.end();
+	return std::ranges::find_if(enabled_extensions,
+	                            [extension](const char *enabled_extension) { return strcmp(extension, enabled_extension) == 0; }) != enabled_extensions.end();
 }
 
 void HPPInstance::query_gpus()

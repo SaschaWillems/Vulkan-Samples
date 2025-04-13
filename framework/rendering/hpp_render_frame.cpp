@@ -18,7 +18,7 @@
 #include "rendering/hpp_render_frame.h"
 #include "buffer_pool.h"
 #include "common/hpp_resource_caching.h"
-#include "core/hpp_command_pool.h"
+#include "core/command_pool.h"
 #include "core/hpp_device.h"
 #include "core/hpp_queue.h"
 
@@ -64,7 +64,7 @@ vkb::BufferAllocationCpp HPPRenderFrame::allocate_buffer(const vk::BufferUsageFl
 	auto buffer_pool_it = buffer_pools.find(usage);
 	if (buffer_pool_it == buffer_pools.end())
 	{
-		LOGE("No buffer pool for buffer usage " + vk::to_string(usage));
+		LOGE("No buffer pool for buffer usage{} ", vk::to_string(usage));
 		return vkb::BufferAllocationCpp{};
 	}
 
@@ -121,7 +121,7 @@ std::vector<uint32_t> HPPRenderFrame::collect_bindings_to_update(const vkb::core
 	return {bindings_to_update.begin(), bindings_to_update.end()};
 }
 
-std::vector<std::unique_ptr<vkb::core::HPPCommandPool>> &HPPRenderFrame::get_command_pools(const vkb::core::HPPQueue  &queue,
+std::vector<std::unique_ptr<vkb::core::CommandPoolCpp>> &HPPRenderFrame::get_command_pools(const vkb::core::HPPQueue  &queue,
                                                                                            vkb::CommandBufferResetMode reset_mode)
 {
 	auto command_pool_it = command_pools.find(queue.get_family_index());
@@ -143,7 +143,7 @@ std::vector<std::unique_ptr<vkb::core::HPPCommandPool>> &HPPRenderFrame::get_com
 	}
 
 	bool inserted                       = false;
-	std::tie(command_pool_it, inserted) = command_pools.emplace(queue.get_family_index(), std::vector<std::unique_ptr<vkb::core::HPPCommandPool>>{});
+	std::tie(command_pool_it, inserted) = command_pools.emplace(queue.get_family_index(), std::vector<std::unique_ptr<vkb::core::CommandPoolCpp>>{});
 	if (!inserted)
 	{
 		throw std::runtime_error("Failed to insert command pool");
@@ -151,7 +151,7 @@ std::vector<std::unique_ptr<vkb::core::HPPCommandPool>> &HPPRenderFrame::get_com
 
 	for (size_t i = 0; i < thread_count; i++)
 	{
-		command_pool_it->second.push_back(std::make_unique<vkb::core::HPPCommandPool>(device, queue.get_family_index(), this, i, reset_mode));
+		command_pool_it->second.push_back(std::make_unique<vkb::core::CommandPoolCpp>(device, queue.get_family_index(), this, i, reset_mode));
 	}
 
 	return command_pool_it->second;
@@ -197,9 +197,8 @@ vkb::core::CommandBufferCpp &HPPRenderFrame::request_command_buffer(const vkb::c
 	auto &command_pools = get_command_pools(queue, reset_mode);
 
 	auto command_pool_it =
-	    std::find_if(command_pools.begin(),
-	                 command_pools.end(),
-	                 [&thread_index](std::unique_ptr<vkb::core::HPPCommandPool> &cmd_pool) { return cmd_pool->get_thread_index() == thread_index; });
+	    std::ranges::find_if(command_pools,
+	                         [&thread_index](std::unique_ptr<vkb::core::CommandPoolCpp> &cmd_pool) { return cmd_pool->get_thread_index() == thread_index; });
 	assert(command_pool_it != command_pools.end());
 
 	return (*command_pool_it)->request_command_buffer(level);

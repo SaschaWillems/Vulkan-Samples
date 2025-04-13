@@ -1,4 +1,4 @@
-/* Copyright (c) 2023, Thomas Atkinson
+/* Copyright (c) 2025, Sascha Willems
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -15,17 +15,18 @@
  * limitations under the License.
  */
 
-#define PLATFORM_LINUX
-#include <core/platform/entrypoint.hpp>
+[[vk::binding(1, 0)]]
+Sampler2D textures[] : register(t1, space0);
 
-#include <windows/context.hpp>
-
-CUSTOM_MAIN(context)
+struct VSOutput
 {
-	if (!dynamic_cast<const vkb::WindowsPlatformContext *>(&context))
-	{
-		throw "context is not a WindowsPlatformContext";
-	}
+    float4 Pos : SV_POSITION;
+    [[vk::location(0)]] float2 UV : TEXCOORD0;
+    [[vk::location(1)]] nointerpolation int TexIndex : TEXCOORD1;
+};
 
-	return 0;
+[shader("fragment")]
+float4 main(VSOutput input) : SV_TARGET
+{
+    return textures[NonUniformResourceIndex(input.TexIndex)].Sample(input.UV);
 }

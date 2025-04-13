@@ -1,4 +1,4 @@
-/* Copyright (c) 2023-2024, Sascha Willems
+/* Copyright (c) 2023-2025, Sascha Willems
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -799,7 +799,7 @@ void OpenCLInterop::prepare_opencl_resources()
 		while (std::getline(extension_stream, extension, ' '))
 		{
 			// Remove trailing zeroes from all extensions (which otherwise may make support checks fail)
-			extension.erase(std::find(extension.begin(), extension.end(), '\0'), extension.end());
+			extension.erase(std::ranges::find(extension, '\0'), extension.end());
 			available_extensions.push_back(extension);
 		}
 
@@ -807,7 +807,7 @@ void OpenCLInterop::prepare_opencl_resources()
 
 		for (auto &extension : required_extensions)
 		{
-			if (std::find(available_extensions.begin(), available_extensions.end(), extension) == available_extensions.end())
+			if (std::ranges::find(available_extensions, extension) == available_extensions.end())
 			{
 				extensions_present = false;
 				break;
@@ -857,8 +857,8 @@ void OpenCLInterop::prepare_opencl_resources()
 
 	if ((selected_platform_id == nullptr) || (selected_device_id == nullptr))
 	{
-		const std::string message{"Could not find an OpenCL platform + device that matches the required extensions and also matches the Vulkan device UUID "};
-		LOGE(message);
+		const std::string message{"Could not find an OpenCL platform + device that matches the required extensions and also matches the Vulkan device UUID"};
+		LOGE("{}", message);
 		throw std::runtime_error(message);
 	}
 
