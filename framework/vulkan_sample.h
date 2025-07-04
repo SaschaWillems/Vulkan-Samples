@@ -19,6 +19,7 @@
 #pragma once
 
 #include "common/hpp_utils.h"
+#include "core/debug.h"
 #include "hpp_gltf_loader.h"
 #include "hpp_gui.h"
 #include "platform/application.h"
@@ -443,7 +444,7 @@ class VulkanSample : public vkb::Application
 	std::vector<vk::LayerSettingEXT> layer_settings;
 
 	/** @brief The Vulkan API version to request for this sample at instance creation time */
-	uint32_t api_version = VK_API_VERSION_1_0;
+	uint32_t api_version = VK_API_VERSION_1_1;
 
 	/** @brief Whether or not we want a high priority graphics queue. */
 	bool high_priority_graphics_queue{false};
@@ -494,7 +495,7 @@ inline void VulkanSample<bindingType>::add_layer_setting(LayerSettingType const 
 	}
 	else
 	{
-		layer_settings.push_back(reinterpret_cast<VkLayerSettingEXT const &>(layerSetting));
+		layer_settings.push_back(reinterpret_cast<vk::LayerSettingEXT const &>(layerSetting));
 	}
 }
 
@@ -1307,7 +1308,7 @@ inline void VulkanSample<bindingType>::set_viewport_and_scissor_impl(vkb::core::
                                                                      vk::Extent2D const                &extent)
 {
 	command_buffer.get_handle().setViewport(0, {{0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.0f, 1.0f}});
-	command_buffer.get_handle().setScissor(0, vk::Rect2D({}, extent));
+	command_buffer.get_handle().setScissor(0, vk::Rect2D{{}, extent});
 }
 
 template <vkb::BindingType bindingType>
@@ -1319,28 +1320,28 @@ inline void VulkanSample<bindingType>::update(float delta_time)
 
 	update_gui(delta_time);
 
-	auto &command_buffer = render_context->begin();
+	auto command_buffer = render_context->begin();
 
 	// Collect the performance data for the sample graphs
 	update_stats(delta_time);
 
-	command_buffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-	stats->begin_sampling(command_buffer);
+	command_buffer->begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+	stats->begin_sampling(*command_buffer);
 
 	if constexpr (bindingType == BindingType::Cpp)
 	{
-		draw(command_buffer, render_context->get_active_frame().get_render_target());
+		draw(*command_buffer, render_context->get_active_frame().get_render_target());
 	}
 	else
 	{
-		draw(reinterpret_cast<vkb::core::CommandBufferC &>(command_buffer),
+		draw(reinterpret_cast<vkb::core::CommandBufferC &>(*command_buffer),
 		     reinterpret_cast<vkb::RenderTarget &>(render_context->get_active_frame().get_render_target()));
 	}
 
-	stats->end_sampling(command_buffer);
-	command_buffer.end();
+	stats->end_sampling(*command_buffer);
+	command_buffer->end();
 
-	render_context->submit(command_buffer);
+	render_context->submit(*command_buffer);
 }
 
 template <vkb::BindingType bindingType>

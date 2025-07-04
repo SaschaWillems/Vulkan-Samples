@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2024, Arm Limited and Contributors
+/* Copyright (c) 2019-2025, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -75,30 +75,30 @@ void DescriptorManagement::update(float delta_time)
 
 	auto &render_context = get_render_context();
 
-	auto &command_buffer = render_context.begin();
+	auto command_buffer = render_context.begin();
 
 	update_stats(delta_time);
 
 	// Process GUI input
 	auto buffer_alloc_strategy = (buffer_allocation.value == 0) ?
-	                                 vkb::BufferAllocationStrategy::OneAllocationPerBuffer :
-	                                 vkb::BufferAllocationStrategy::MultipleAllocationsPerBuffer;
+	                                 vkb::rendering::BufferAllocationStrategy::OneAllocationPerBuffer :
+	                                 vkb::rendering::BufferAllocationStrategy::MultipleAllocationsPerBuffer;
 
 	render_context.get_active_frame().set_buffer_allocation_strategy(buffer_alloc_strategy);
 
 	auto descriptor_management_strategy = (descriptor_caching.value == 0) ?
-	                                          vkb::DescriptorManagementStrategy::CreateDirectly :
-	                                          vkb::DescriptorManagementStrategy::StoreInCache;
+	                                          vkb::rendering::DescriptorManagementStrategy::CreateDirectly :
+	                                          vkb::rendering::DescriptorManagementStrategy::StoreInCache;
 
 	render_context.get_active_frame().set_descriptor_management_strategy(descriptor_management_strategy);
 
-	command_buffer.begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-	get_stats().begin_sampling(command_buffer);
+	command_buffer->begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+	get_stats().begin_sampling(*command_buffer);
 
-	draw(command_buffer, render_context.get_active_frame().get_render_target());
+	draw(*command_buffer, render_context.get_active_frame().get_render_target());
 
-	get_stats().end_sampling(command_buffer);
-	command_buffer.end();
+	get_stats().end_sampling(*command_buffer);
+	command_buffer->end();
 
 	render_context.submit(command_buffer);
 }

@@ -20,6 +20,7 @@
 
 #include "common/helpers.h"
 #include "common/vk_common.h"
+#include "core/buffer.h"
 #include "core/command_buffer.h"
 #include "core/command_pool.h"
 #include "core/debug.h"
@@ -183,7 +184,7 @@ class Device : public vkb::core::VulkanResourceC<VkDevice>
 	 * @brief Requests a command buffer from the general command_pool
 	 * @return A new command buffer
 	 */
-	vkb::core::CommandBufferC &request_command_buffer() const;
+	std::shared_ptr<vkb::core::CommandBufferC> request_command_buffer() const;
 
 	FencePool &get_fence_pool() const;
 

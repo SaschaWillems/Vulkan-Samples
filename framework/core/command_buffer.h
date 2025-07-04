@@ -25,7 +25,6 @@
 #include "core/physical_device.h"
 #include "hpp_resource_binding_state.h"
 #include "rendering/hpp_pipeline_state.h"
-#include "rendering/hpp_render_frame.h"
 #include "rendering/hpp_render_target.h"
 #include "rendering/subpass.h"
 
@@ -179,12 +178,13 @@ class CommandBuffer
 	void                   end_query(QueryPoolType const &query_pool, uint32_t query);
 	void                   end_render_pass();
 	void                   execute_commands(vkb::core::CommandBuffer<bindingType> &secondary_command_buffer);
-	void                   execute_commands(std::vector<vkb::core::CommandBuffer<bindingType> *> &secondary_command_buffers);
+	void                   execute_commands(std::vector<std::shared_ptr<vkb::core::CommandBuffer<bindingType>>> &secondary_command_buffers);
 	CommandBufferLevelType get_level() const;
 	RenderPassType        &get_render_pass(RenderTargetType const                                                   &render_target,
 	                                       std::vector<LoadStoreInfoType> const                                     &load_store_infos,
 	                                       std::vector<std::unique_ptr<vkb::rendering::Subpass<bindingType>>> const &subpasses);
 	void                   image_memory_barrier(ImageViewType const &image_view, ImageMemoryBarrierType const &memory_barrier) const;
+	void                   image_memory_barrier(RenderTargetType &render_target, uint32_t view_index, ImageMemoryBarrierType const &memory_barrier) const;
 	void                   next_subpass();
 
 	/**
@@ -260,7 +260,7 @@ class CommandBuffer
 	                                                     vk::DeviceSize                             size,
 	                                                     vkb::common::HPPBufferMemoryBarrier const &memory_barrier);
 	void                      copy_buffer_impl(vkb::core::BufferCpp const &src_buffer, vkb::core::BufferCpp const &dst_buffer, vk::DeviceSize size);
-	void                      execute_commands_impl(std::vector<vkb::core::CommandBuffer<vkb::BindingType::Cpp> *> &secondary_command_buffers);
+	void                      execute_commands_impl(std::vector<std::shared_ptr<vkb::core::CommandBuffer<vkb::BindingType::Cpp>>> &secondary_command_buffers);
 	void                      flush_impl(vkb::core::HPPDevice &device, vk::PipelineBindPoint pipeline_bind_point);
 	void                      flush_descriptor_state_impl(vk::PipelineBindPoint pipeline_bind_point);
 	void                      flush_pipeline_state_impl(vkb::core::HPPDevice &device, vk::PipelineBindPoint pipeline_bind_point);
@@ -296,6 +296,8 @@ using CommandBufferCpp = CommandBuffer<vkb::BindingType::Cpp>;
 }        // namespace vkb
 
 #include "core/command_pool.h"
+#include "core/device.h"
+#include "rendering/render_frame.h"
 
 namespace vkb
 {
@@ -305,7 +307,7 @@ template <vkb::BindingType bindingType>
 inline vkb::core::CommandBuffer<bindingType>::CommandBuffer(vkb::core::CommandPool<bindingType> &command_pool_, CommandBufferLevelType level_) :
     vkb::core::VulkanResource<bindingType, CommandBufferType>(nullptr, &command_pool_.get_device()), level(static_cast<vk::CommandBufferLevel>(level_)), command_pool(reinterpret_cast<vkb::core::CommandPoolCpp &>(command_pool_)), max_push_constants_size(command_pool_.get_device().get_gpu().get_properties().limits.maxPushConstantsSize)
 {
-	vk::CommandBufferAllocateInfo allocate_info(command_pool.get_handle(), level, 1);
+	vk::CommandBufferAllocateInfo allocate_info{.commandPool = command_pool.get_handle(), .level = level, .commandBufferCount = 1};
 
 	this->set_handle(this->get_device().get_resource().allocateCommandBuffers(allocate_info).front());
 }
@@ -380,7 +382,7 @@ inline void CommandBuffer<bindingType>::begin_impl(vk::CommandBufferUsageFlags  
 	descriptor_set_layout_binding_state.clear();
 	stored_push_constants.clear();
 
-	vk::CommandBufferBeginInfo       begin_info(flags);
+	vk::CommandBufferBeginInfo       begin_info{.flags = flags};
 	vk::CommandBufferInheritanceInfo inheritance;
 
 	if (level == vk::CommandBufferLevel::eSecondary)
@@ -463,7 +465,11 @@ inline void CommandBuffer<bindingType>::begin_render_pass_impl(vkb::rendering::H
 	current_framebuffer = &framebuffer;
 
 	// Begin render pass
-	vk::RenderPassBeginInfo begin_info(current_render_pass->get_handle(), current_framebuffer->get_handle(), {{}, render_target.get_extent()}, clear_values);
+	vk::RenderPassBeginInfo begin_info{.renderPass      = current_render_pass->get_handle(),
+	                                   .framebuffer     = current_framebuffer->get_handle(),
+	                                   .renderArea      = {.extent = render_target.get_extent()},
+	                                   .clearValueCount = static_cast<uint32_t>(clear_values.size()),
+	                                   .pClearValues    = clear_values.data()};
 
 	const auto &framebuffer_extent = current_framebuffer->get_extent();
 
@@ -658,7 +664,11 @@ inline void CommandBuffer<bindingType>::buffer_memory_barrier_impl(vkb::core::Bu
                                                                    vk::DeviceSize                             size,
                                                                    vkb::common::HPPBufferMemoryBarrier const &memory_barrier)
 {
-	vk::BufferMemoryBarrier buffer_memory_barrier(memory_barrier.src_access_mask, memory_barrier.dst_access_mask, {}, {}, buffer.get_handle(), offset, size);
+	vk::BufferMemoryBarrier buffer_memory_barrier{.srcAccessMask = memory_barrier.src_access_mask,
+	                                              .dstAccessMask = memory_barrier.dst_access_mask,
+	                                              .buffer        = buffer.get_handle(),
+	                                              .offset        = offset,
+	                                              .size          = size};
 
 	this->get_resource().pipelineBarrier(memory_barrier.src_stage_mask, memory_barrier.dst_stage_mask, {}, {}, buffer_memory_barrier, {});
 }
@@ -697,7 +707,7 @@ template <vkb::BindingType bindingType>
 inline void
     CommandBuffer<bindingType>::copy_buffer_impl(vkb::core::BufferCpp const &src_buffer, vkb::core::BufferCpp const &dst_buffer, vk::DeviceSize size)
 {
-	vk::BufferCopy copy_region({}, {}, size);
+	vk::BufferCopy copy_region{.size = size};
 	this->get_resource().copyBuffer(src_buffer.get_handle(), dst_buffer.get_handle(), copy_region);
 }
 
@@ -850,7 +860,7 @@ inline void CommandBuffer<bindingType>::execute_commands(vkb::core::CommandBuffe
 }
 
 template <vkb::BindingType bindingType>
-inline void CommandBuffer<bindingType>::execute_commands(std::vector<vkb::core::CommandBuffer<bindingType> *> &secondary_command_buffers)
+inline void CommandBuffer<bindingType>::execute_commands(std::vector<std::shared_ptr<vkb::core::CommandBuffer<bindingType>>> &secondary_command_buffers)
 {
 	if constexpr (bindingType == vkb::BindingType::Cpp)
 	{
@@ -858,18 +868,18 @@ inline void CommandBuffer<bindingType>::execute_commands(std::vector<vkb::core::
 	}
 	else
 	{
-		execute_commands_impl(reinterpret_cast<std::vector<vkb::core::CommandBufferCpp *> &>(secondary_command_buffers));
+		execute_commands_impl(reinterpret_cast<std::vector<std::shared_ptr<vkb::core::CommandBufferCpp>> &>(secondary_command_buffers));
 	}
 }
 
 template <vkb::BindingType bindingType>
-inline void CommandBuffer<bindingType>::execute_commands_impl(std::vector<vkb::core::CommandBuffer<vkb::BindingType::Cpp> *> &secondary_command_buffers)
+inline void CommandBuffer<bindingType>::execute_commands_impl(std::vector<std::shared_ptr<vkb::core::CommandBuffer<vkb::BindingType::Cpp>>> &secondary_command_buffers)
 {
 	std::vector<vk::CommandBuffer> sec_cmd_buf_handles(secondary_command_buffers.size(), nullptr);
 	std::transform(secondary_command_buffers.begin(),
 	               secondary_command_buffers.end(),
 	               sec_cmd_buf_handles.begin(),
-	               [](const vkb::core::CommandBuffer<vkb::BindingType::Cpp> *sec_cmd_buf) { return sec_cmd_buf->get_handle(); });
+	               [](auto const &sec_cmd_buf) { return sec_cmd_buf->get_handle(); });
 	this->get_resource().executeCommands(sec_cmd_buf_handles);
 }
 
@@ -922,6 +932,24 @@ inline vkb::core::HPPRenderPass &
 }
 
 template <vkb::BindingType bindingType>
+inline void CommandBuffer<bindingType>::image_memory_barrier(RenderTargetType &render_target, uint32_t view_index, ImageMemoryBarrierType const &memory_barrier) const
+{
+	auto const &image_view = render_target.get_views()[view_index];
+
+	if constexpr (bindingType == vkb::BindingType::Cpp)
+	{
+		image_memory_barrier_impl(image_view, memory_barrier);
+	}
+	else
+	{
+		image_memory_barrier_impl(reinterpret_cast<vkb::core::HPPImageView const &>(image_view),
+		                          reinterpret_cast<vkb::common::HPPImageMemoryBarrier const &>(memory_barrier));
+	}
+
+	render_target.set_layout(view_index, memory_barrier.new_layout);
+}
+
+template <vkb::BindingType bindingType>
 inline void CommandBuffer<bindingType>::image_memory_barrier(ImageViewType const &image_view, ImageMemoryBarrierType const &memory_barrier) const
 {
 	if constexpr (bindingType == vkb::BindingType::Cpp)
@@ -952,14 +980,14 @@ inline void CommandBuffer<bindingType>::image_memory_barrier_impl(vkb::core::HPP
 	}
 
 	// actively ignore queue family indices provided by memory_barrier !!
-	vk::ImageMemoryBarrier image_memory_barrier(memory_barrier.src_access_mask,
-	                                            memory_barrier.dst_access_mask,
-	                                            memory_barrier.old_layout,
-	                                            memory_barrier.new_layout,
-	                                            vk::QueueFamilyIgnored,
-	                                            vk::QueueFamilyIgnored,
-	                                            image_view.get_image().get_handle(),
-	                                            subresource_range);
+	vk::ImageMemoryBarrier image_memory_barrier{.srcAccessMask       = memory_barrier.src_access_mask,
+	                                            .dstAccessMask       = memory_barrier.dst_access_mask,
+	                                            .oldLayout           = memory_barrier.old_layout,
+	                                            .newLayout           = memory_barrier.new_layout,
+	                                            .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+	                                            .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+	                                            .image               = image_view.get_image().get_handle(),
+	                                            .subresourceRange    = subresource_range};
 
 	vk::PipelineStageFlags src_stage_mask = memory_barrier.src_stage_mask;
 	vk::PipelineStageFlags dst_stage_mask = memory_barrier.dst_stage_mask;
@@ -1389,7 +1417,7 @@ inline void CommandBuffer<bindingType>::flush_descriptor_state_impl(vk::Pipeline
 						// Get buffer info
 						if (buffer != nullptr && vkb::common::is_buffer_descriptor_type(binding_info->descriptorType))
 						{
-							vk::DescriptorBufferInfo buffer_info(resource_info.buffer->get_handle(), resource_info.offset, resource_info.range);
+							vk::DescriptorBufferInfo buffer_info{resource_info.buffer->get_handle(), resource_info.offset, resource_info.range};
 
 							if (vkb::common::is_dynamic_buffer_descriptor_type(binding_info->descriptorType))
 							{
@@ -1404,7 +1432,7 @@ inline void CommandBuffer<bindingType>::flush_descriptor_state_impl(vk::Pipeline
 						else if (image_view != nullptr || sampler != nullptr)
 						{
 							// Can be null for input attachments
-							vk::DescriptorImageInfo image_info(sampler ? sampler->get_handle() : nullptr, image_view->get_handle());
+							vk::DescriptorImageInfo image_info{sampler ? sampler->get_handle() : nullptr, image_view->get_handle()};
 
 							if (image_view != nullptr)
 							{
