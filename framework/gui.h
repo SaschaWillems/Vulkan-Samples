@@ -205,11 +205,12 @@ class Gui
 	 * @param swapchain_view The swapchain image view to render UI onto
 	 * @param width Render area width
 	 * @param height Render area height
+	 * @param current_buffer Index of the vertex and index buffers (only if using new sync)
 	 *
 	 * This method starts its own rendering pass, draws the UI, and ends the pass.
 	 * Call this after ending your main rendering pass (vkCmdEndRenderingKHR).
 	 */
-	void draw(CommandBufferType command_buffer, ImageViewType swapchain_view, uint32_t width, uint32_t height);
+	void draw(CommandBufferType command_buffer, ImageViewType swapchain_view, uint32_t width, uint32_t height, uint32_t current_buffer = 0);
 
 	Drawer &get_drawer();
 
@@ -558,8 +559,11 @@ inline void Gui<bindingType>::draw(CommandBufferType command_buffer, uint32_t cu
 }
 
 template <vkb::BindingType bindingType>
-inline void Gui<bindingType>::draw(CommandBufferType command_buffer, ImageViewType swapchain_view, uint32_t width, uint32_t height)
+inline void Gui<bindingType>::draw(CommandBufferType command_buffer, ImageViewType swapchain_view, uint32_t width, uint32_t height, uint32_t current_buffer)
 {
+	// @todo
+	this->current_buffer = current_buffer;
+
 	if constexpr (bindingType == BindingType::Cpp)
 	{
 		draw_impl(command_buffer, swapchain_view, width, height);
