@@ -205,6 +205,7 @@ class Gui
 	 * @param swapchain_view The swapchain image view to render UI onto
 	 * @param width Render area width
 	 * @param height Render area height
+	 * @param current_buffer Index of the vertex and index buffers (only if using new sync)
 	 *
 	 * This method starts its own rendering pass, draws the UI, and ends the pass.
 	 * Call this after ending your main rendering pass (vkCmdEndRenderingKHR).
