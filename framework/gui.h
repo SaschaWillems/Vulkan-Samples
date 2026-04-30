@@ -209,7 +209,7 @@ class Gui
 	 * This method starts its own rendering pass, draws the UI, and ends the pass.
 	 * Call this after ending your main rendering pass (vkCmdEndRenderingKHR).
 	 */
-	void draw(CommandBufferType command_buffer, ImageViewType swapchain_view, uint32_t width, uint32_t height);
+	void draw(CommandBufferType command_buffer, ImageViewType swapchain_view, uint32_t width, uint32_t height, uint32_t current_buffer = 0);
 
 	Drawer &get_drawer();
 
@@ -349,7 +349,6 @@ class Gui
 
 	// @todo
 	bool     use_new_sync{false};
-	uint32_t max_concurrent_frames = 2;
 	uint32_t current_buffer;
 
 	struct Buffers
@@ -359,7 +358,7 @@ class Gui
 		uint32_t                              index_count{0};
 		uint32_t                              vertex_count{0};
 	};
-	std::vector<Buffers> buffers;
+	std::array<Buffers, max_concurrent_frames> buffers;
 };
 
 using GuiC   = Gui<vkb::BindingType::C>;
@@ -552,14 +551,16 @@ inline Gui<bindingType>::~Gui()
 template <vkb::BindingType bindingType>
 inline void Gui<bindingType>::draw(CommandBufferType command_buffer, uint32_t current_buffer)
 {
-	// @todo
+	// @todo: Sascha
 	this->current_buffer = current_buffer;
 	draw(command_buffer, pipeline, pipeline_layout->get_handle(), descriptor_set);
 }
 
 template <vkb::BindingType bindingType>
-inline void Gui<bindingType>::draw(CommandBufferType command_buffer, ImageViewType swapchain_view, uint32_t width, uint32_t height)
+inline void Gui<bindingType>::draw(CommandBufferType command_buffer, ImageViewType swapchain_view, uint32_t width, uint32_t height, uint32_t current_buffer)
 {
+	// @todo: Sascha
+	this->current_buffer = current_buffer;
 	if constexpr (bindingType == BindingType::Cpp)
 	{
 		draw_impl(command_buffer, swapchain_view, width, height);
@@ -1431,12 +1432,6 @@ inline bool Gui<bindingType>::update_buffers()
 
 	if (use_new_sync)
 	{
-		// @todo
-		if (buffers.size() < max_concurrent_frames)
-		{
-			buffers.resize(max_concurrent_frames);
-		}
-
 		// Create buffers with multiple of a chunk size to minimize the need to recreate them
 		const VkDeviceSize chunkSize = 16384;
 		vertex_buffer_size           = ((vertex_buffer_size + chunkSize - 1) / chunkSize) * chunkSize;

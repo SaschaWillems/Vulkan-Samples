@@ -524,7 +524,7 @@ void ApiVulkanSample::draw_ui(const VkCommandBuffer command_buffer, uint32_t swa
 		vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 		vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-		get_gui().draw(command_buffer, swapchain_buffers[swapchain_image_index].view, width, height);
+		get_gui().draw(command_buffer, swapchain_buffers[swapchain_image_index].view, width, height, current_buffer);
 	}
 }
 

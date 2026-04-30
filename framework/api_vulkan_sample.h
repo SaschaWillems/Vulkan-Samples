@@ -127,9 +127,6 @@ class ApiVulkanSample : public vkb::VulkanSampleC
 	// @todo
 	bool use_new_sync = false;
 
-	// @todo
-	constexpr static uint32_t max_concurrent_frames = 2;
-
 	// Stores the swapchain image buffers
 	std::vector<SwapchainBuffer> swapchain_buffers;
 
