@@ -162,16 +162,23 @@ void DescriptorHeap::create_descriptor_heaps()
 	    .pNext = &descriptor_heap_properties};
 	vkGetPhysicalDeviceProperties2(get_device().get_gpu().get_handle(), &device_props_2);
 
+	// Resource heap (buffers and images)
+	buffer_descriptor_size = aligned_size(descriptor_heap_properties.bufferDescriptorSize, descriptor_heap_properties.bufferDescriptorAlignment);
+	// Images are stored after the last buffer (aligned)
+	image_heap_offset     = aligned_size(buffer_descriptor_size * cube_count, descriptor_heap_properties.imageDescriptorAlignment);
+	image_descriptor_size = aligned_size(descriptor_heap_properties.imageDescriptorSize, descriptor_heap_properties.imageDescriptorAlignment);
+	// Samplers will be stored in a separate heap
+	sampler_descriptor_size = aligned_size(descriptor_heap_properties.samplerDescriptorSize, descriptor_heap_properties.samplerDescriptorAlignment);
+
 	// There are two descriptor heap types: One that can store resources (buffers, images) and one that can store samplers
-	// We create heaps with a fixed size that's guaranteed to fit in the few descriptors we use
-	const VkDeviceSize heap_buffer_size = aligned_size(2048 + descriptor_heap_properties.minResourceHeapReservedRange, descriptor_heap_properties.resourceHeapAlignment);
+	const VkDeviceSize heap_buffer_size = aligned_size(image_heap_offset + cube_count * image_descriptor_size + descriptor_heap_properties.minResourceHeapReservedRange, descriptor_heap_properties.resourceHeapAlignment);
 
 	descriptor_heap_resources = std::make_unique<vkb::core::BufferC>(get_device(),
 	                                                                 heap_buffer_size,
 	                                                                 VK_BUFFER_USAGE_DESCRIPTOR_HEAP_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 	                                                                 VMA_MEMORY_USAGE_CPU_TO_GPU);
 
-	const VkDeviceSize heap_sampler_size = aligned_size(2048 + descriptor_heap_properties.minSamplerHeapReservedRange, descriptor_heap_properties.samplerHeapAlignment);
+	const VkDeviceSize heap_sampler_size = aligned_size(sampler_count * sampler_descriptor_size + descriptor_heap_properties.minSamplerHeapReservedRange, descriptor_heap_properties.samplerHeapAlignment);
 
 	descriptor_heap_samplers = std::make_unique<vkb::core::BufferC>(get_device(),
 	                                                                heap_sampler_size,
@@ -179,8 +186,6 @@ void DescriptorHeap::create_descriptor_heaps()
 	                                                                VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	// Sampler heap
-	sampler_descriptor_size = aligned_size(descriptor_heap_properties.samplerDescriptorSize, descriptor_heap_properties.samplerDescriptorAlignment);
-
 	std::array<VkHostAddressRangeEXT, 2> host_address_ranges_samplers{};
 
 	// No need to create an actual VkSampler, we can simply pass the create info that describes the sampler
@@ -216,12 +221,6 @@ void DescriptorHeap::create_descriptor_heaps()
 	}
 
 	VK_CHECK(vkWriteSamplerDescriptorsEXT(get_device().get_handle(), static_cast<uint32_t>(host_address_ranges_samplers.size()), sampler_create_infos.data(), host_address_ranges_samplers.data()));
-
-	// Resource heap (buffers and images)
-	buffer_descriptor_size = aligned_size(descriptor_heap_properties.bufferDescriptorSize, descriptor_heap_properties.bufferDescriptorAlignment);
-	// Images are stored after the last buffer (aligned)
-	image_heap_offset     = aligned_size(buffer_descriptor_size * uniform_buffers.size(), descriptor_heap_properties.imageDescriptorAlignment);
-	image_descriptor_size = aligned_size(descriptor_heap_properties.imageDescriptorSize, descriptor_heap_properties.imageDescriptorAlignment);
 
 	auto                                     vector_size{cubes.size() + uniform_buffers.size()};
 	std::vector<VkHostAddressRangeEXT>       host_address_ranges_resources(vector_size);

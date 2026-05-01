@@ -40,7 +40,8 @@ class DescriptorHeap : public ApiVulkanSample
   private:
 	bool animate = true;
 
-	static const size_t cube_count = 2;
+	static const size_t cube_count{2};
+	static const size_t sampler_count{2};
 
 	struct Cube
 	{
@@ -53,7 +54,7 @@ class DescriptorHeap : public ApiVulkanSample
 	{
 		glm::mat4 projection_matrix;
 		glm::mat4 view_matrix;
-		glm::mat4 model_matrix[2];
+		glm::mat4 model_matrix[cube_count];
 	} uniform_data;
 
 	VkPhysicalDeviceDescriptorHeapPropertiesEXT      descriptor_heap_properties{};

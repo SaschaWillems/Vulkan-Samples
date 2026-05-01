@@ -76,7 +76,7 @@ As noted above, heaps are basically just memory that you can copy descriptor-rel
 
 [,cpp]
 ----
-const VkDeviceSize heap_buffer_size = aligned_size(2048 + descriptor_heap_properties.minResourceHeapReservedRange, descriptor_heap_properties.resourceHeapAlignment);
+const VkDeviceSize heap_buffer_size = aligned_size(image_heap_offset + cube_count * image_descriptor_size + descriptor_heap_properties.minResourceHeapReservedRange, descriptor_heap_properties.resourceHeapAlignment);
 
 descriptor_heap_resources =
     std::make_unique<vkb::core::BufferC>(
