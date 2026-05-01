@@ -60,7 +60,6 @@ bool DescriptorHeap::prepare(const vkb::ApplicationOptions &options)
 	prepare_uniform_buffers();
 	create_descriptor_heaps();
 	create_pipeline();
-	build_command_buffers();
 	prepared = true;
 
 	return true;
@@ -141,8 +140,8 @@ void DescriptorHeap::update_uniform_buffers(float delta_time)
 	uniform_data.projection_matrix = camera.matrices.perspective;
 	uniform_data.view_matrix       = camera.matrices.view;
 
-	std::array<glm::vec3, 2> positions = {glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(1.5f, 0.5f, 0.0f)};
-	for (auto i = 0; i < cubes.size(); i++)
+	std::array<glm::vec3, cube_count> positions = {glm::vec3(-2.0f, 0.0f, 0.0f), glm::vec3(1.5f, 0.5f, 0.0f)};
+	for (auto i = 0; i < cube_count; i++)
 	{
 		glm::mat4 cubeMat            = glm::translate(glm::mat4(1.0f), positions[i]);
 		cubeMat                      = glm::rotate(cubeMat, glm::radians(cubes[i].rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -247,9 +246,9 @@ void DescriptorHeap::create_descriptor_heaps()
 		resource_heap_index++;
 	}
 
-	// Images
-	std::array<VkImageViewCreateInfo, 2>    image_view_create_infos{};
-	std::array<VkImageDescriptorInfoEXT, 2> image_descriptor_infos{};
+	// Images (one per cube)
+	std::array<VkImageViewCreateInfo, cube_count>    image_view_create_infos{};
+	std::array<VkImageDescriptorInfoEXT, cube_count> image_descriptor_infos{};
 
 	for (auto i = 0; i < cubes.size(); i++)
 	{
@@ -536,7 +535,7 @@ void DescriptorHeap::build_command_buffer()
 
 	vkCmdBindVertexBuffers(draw_cmd_buffer, 0, 1, vertex_buffer.get(), offsets);
 	vkCmdBindIndexBuffer(draw_cmd_buffer, index_buffer->get_handle(), 0, cube->index_type);
-	vkCmdDrawIndexed(draw_cmd_buffer, cube->vertex_indices, 2, 0, 0, 0);
+	vkCmdDrawIndexed(draw_cmd_buffer, cube->vertex_indices, cube_count, 0, 0, 0);
 
 	vkCmdEndRenderingKHR(draw_cmd_buffer);
 
