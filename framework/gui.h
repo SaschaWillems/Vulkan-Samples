@@ -635,6 +635,12 @@ inline void
 		return;
 	}
 
+	// @todo: Sample using dynamic rendering seem to initialize differnt, so buffer might be empty, need to check why
+	if (use_new_sync && !buffers[current_buffer].vertex_buffer)
+	{
+		return;
+	}
+
 	command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 	command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, 0, descriptor_set, {});
 
