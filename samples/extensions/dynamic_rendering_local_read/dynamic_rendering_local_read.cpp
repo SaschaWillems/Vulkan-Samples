@@ -739,7 +739,7 @@ void DynamicRenderingLocalRead::prepare_pipelines()
 		pipeline_rendering_create_info.stencilAttachmentFormat = depth_format;
 	}
 #else
-	blend_state.attachmentCount  = 1;
+	blend_state.attachmentCount = 1;
 	pipeline_create_info.subpass = 2;
 #endif
 
@@ -761,7 +761,7 @@ void DynamicRenderingLocalRead::prepare_pipelines()
 		pipeline_rendering_create_info.stencilAttachmentFormat = depth_format;
 	}
 #else
-	blend_state.attachmentCount  = 1;
+	blend_state.attachmentCount = 1;
 	pipeline_create_info.subpass = 1;
 #endif
 
