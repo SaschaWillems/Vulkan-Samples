@@ -385,20 +385,20 @@ void DynamicRendering::build_command_buffer()
 	if (enable_dynamic)
 	{
 		vkb::image_layout_transition(draw_cmd_buffer,
-			                            swapchain_buffers[current_image_index].image,
-			                            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-			                            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-			                            0,
-			                            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-			                            VK_IMAGE_LAYOUT_UNDEFINED,
-			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			                            range);
+		                             swapchain_buffers[current_image_index].image,
+		                             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		                             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		                             0,
+		                             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		                             VK_IMAGE_LAYOUT_UNDEFINED,
+		                             VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+		                             range);
 
 		vkb::image_layout_transition(draw_cmd_buffer,
-			                            depth_stencil.image,
-			                            VK_IMAGE_LAYOUT_UNDEFINED,
-			                            VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-			                            depth_range);
+		                             depth_stencil.image,
+		                             VK_IMAGE_LAYOUT_UNDEFINED,
+		                             VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+		                             depth_range);
 
 		VkRenderingAttachmentInfoKHR color_attachment_info = vkb::initializers::rendering_attachment_info();
 		color_attachment_info.imageView                    = swapchain_buffers[current_image_index].view;
@@ -432,10 +432,10 @@ void DynamicRendering::build_command_buffer()
 		draw_ui(draw_cmd_buffer, current_image_index);
 
 		vkb::image_layout_transition(draw_cmd_buffer,
-			                            swapchain_buffers[current_image_index].image,
-			                            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			                            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			                            range);
+		                             swapchain_buffers[current_image_index].image,
+		                             VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+		                             VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+		                             range);
 	}
 	else
 	{

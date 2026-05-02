@@ -65,8 +65,8 @@ class DynamicRendering : public ApiVulkanSample
 		float     modelscale = 0.05f;
 	} ubo_vs;
 
-	std::unique_ptr<vkb::sg::SubMesh>   skybox;
-	std::unique_ptr<vkb::sg::SubMesh>   object;
+	std::unique_ptr<vkb::sg::SubMesh> skybox;
+	std::unique_ptr<vkb::sg::SubMesh> object;
 
 	std::array<std::unique_ptr<vkb::core::BufferC>, max_concurrent_frames> uniform_buffers{};
 	std::array<VkDescriptorSet, max_concurrent_frames>                     descriptor_sets{};
