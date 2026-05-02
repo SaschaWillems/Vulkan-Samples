@@ -289,14 +289,6 @@ void HostImageCopy::build_command_buffer()
 	VK_CHECK(vkEndCommandBuffer(draw_cmd_buffer));
 }
 
-void HostImageCopy::draw()
-{
-	ApiVulkanSample::prepare_frame();
-	update_uniform_buffers();
-	build_command_buffer();
-	ApiVulkanSample::submit_frame();
-}
-
 void HostImageCopy::setup_descriptor_pool()
 {
 	// Example uses one ubo and one image sampler
@@ -466,7 +458,10 @@ void HostImageCopy::render(float delta_time)
 	{
 		return;
 	}
-	draw();
+	ApiVulkanSample::prepare_frame();
+	update_uniform_buffers();
+	build_command_buffer();
+	ApiVulkanSample::submit_frame();
 }
 
 void HostImageCopy::on_update_ui_overlay(vkb::Drawer &drawer)

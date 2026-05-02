@@ -53,7 +53,6 @@ class HPPPushDescriptors : public HPPApiVulkanSample
 	void create_pipeline();
 	void create_pipeline_layout();
 	void create_uniform_buffers();
-	void draw(float delta_time);
 	void initializeCamera();
 	void load_assets();
 	void update_cube_uniform_buffers(float delta_time);

@@ -68,7 +68,6 @@ class SeparateImageSampler : public ApiVulkanSample
 	void         build_command_buffer();
 	void         setup_samplers();
 	void         load_assets();
-	void         draw();
 	void         generate_quad();
 	void         setup_descriptor_pool();
 	void         setup_descriptor_set_layout();

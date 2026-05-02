@@ -153,14 +153,6 @@ void SeparateImageSampler::load_assets()
 	texture = load_texture("textures/metalplate01_rgba.ktx", vkb::sg::Image::Color);
 }
 
-void SeparateImageSampler::draw()
-{
-	ApiVulkanSample::prepare_frame();
-	update_uniform_buffers();
-	build_command_buffer();
-	ApiVulkanSample::submit_frame();
-}
-
 void SeparateImageSampler::generate_quad()
 {
 	// Setup vertices for a single uv-mapped quad made from two triangles
@@ -452,7 +444,10 @@ void SeparateImageSampler::render(float delta_time)
 	{
 		return;
 	}
-	draw();
+	ApiVulkanSample::prepare_frame();
+	update_uniform_buffers();
+	build_command_buffer();
+	ApiVulkanSample::submit_frame();
 }
 
 void SeparateImageSampler::on_update_ui_overlay(vkb::Drawer &drawer)

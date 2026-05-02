@@ -76,7 +76,6 @@ class VertexDynamicState : public ApiVulkanSample
 	void prepare_uniform_buffers();
 	void update_uniform_buffers();
 	void create_pipeline();
-	void draw();
 
 	void load_assets();
 	void create_descriptor_pool();

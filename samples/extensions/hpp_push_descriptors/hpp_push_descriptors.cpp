@@ -109,7 +109,11 @@ void HPPPushDescriptors::render(float delta_time)
 {
 	if (prepared)
 	{
-		draw(delta_time);
+		HPPApiVulkanSample::prepare_frame();
+		update_cube_uniform_buffers(delta_time);
+		update_uniform_buffers();
+		build_command_buffer();
+		HPPApiVulkanSample::submit_frame();
 	}
 }
 
@@ -253,15 +257,6 @@ void HPPPushDescriptors::create_pipeline_layout()
 {
 	vk::PipelineLayoutCreateInfo pipeline_layout_create_info{.setLayoutCount = 1, .pSetLayouts = &descriptor_set_layout};
 	pipeline_layout = get_device().get_handle().createPipelineLayout(pipeline_layout_create_info);
-}
-
-void HPPPushDescriptors::draw(float delta_time)
-{
-	HPPApiVulkanSample::prepare_frame();
-	update_cube_uniform_buffers(delta_time);
-	update_uniform_buffers();
-	build_command_buffer();
-	HPPApiVulkanSample::submit_frame();
 }
 
 void HPPPushDescriptors::initializeCamera()

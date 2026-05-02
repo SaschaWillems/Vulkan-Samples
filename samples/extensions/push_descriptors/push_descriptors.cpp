@@ -300,15 +300,6 @@ void PushDescriptors::update_cube_uniform_buffers(float delta_time)
 	}
 }
 
-void PushDescriptors::draw(float delta_time)
-{
-	ApiVulkanSample::prepare_frame();
-	update_cube_uniform_buffers(delta_time);
-	update_uniform_buffers();
-	build_command_buffer();
-	ApiVulkanSample::submit_frame();
-}
-
 bool PushDescriptors::prepare(const vkb::ApplicationOptions &options)
 {
 	if (!ApiVulkanSample::prepare(options))
@@ -364,7 +355,11 @@ void PushDescriptors::render(float delta_time)
 	{
 		return;
 	}
-	draw(delta_time);
+	ApiVulkanSample::prepare_frame();
+	update_cube_uniform_buffers(delta_time);
+	update_uniform_buffers();
+	build_command_buffer();
+	ApiVulkanSample::submit_frame();
 }
 
 void PushDescriptors::on_update_ui_overlay(vkb::Drawer &drawer)

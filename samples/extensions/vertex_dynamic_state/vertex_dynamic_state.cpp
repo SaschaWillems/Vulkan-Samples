@@ -85,18 +85,6 @@ void VertexDynamicState::load_assets()
 }
 
 /**
- * 	@fn void VertexDynamicState::draw()
- *  @brief Preparing frame and submitting it to the present queue
- */
-void VertexDynamicState::draw()
-{
-	ApiVulkanSample::prepare_frame();
-	update_uniform_buffers();
-	build_command_buffer();
-	ApiVulkanSample::submit_frame();
-}
-
-/**
  * 	@fn void VertexDynamicState::render(float delta_time)
  * 	@brief Drawing frames and/or updating uniform buffers when camera position/rotation was changed
  */
@@ -106,7 +94,10 @@ void VertexDynamicState::render(float delta_time)
 	{
 		return;
 	}
-	draw();
+	ApiVulkanSample::prepare_frame();
+	update_uniform_buffers();
+	build_command_buffer();
+	ApiVulkanSample::submit_frame();
 }
 
 /**

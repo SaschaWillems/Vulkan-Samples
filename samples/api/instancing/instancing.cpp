@@ -442,14 +442,6 @@ void Instancing::update_uniform_buffers(float delta_time)
 	uniform_buffers[current_buffer]->convert_and_update(ubo_vs);
 }
 
-void Instancing::draw(float delta_time)
-{
-	ApiVulkanSample::prepare_frame();
-	update_uniform_buffers(delta_time);
-	build_command_buffer();
-	ApiVulkanSample::submit_frame();
-}
-
 bool Instancing::prepare(const vkb::ApplicationOptions &options)
 {
 	if (!ApiVulkanSample::prepare(options))
@@ -480,7 +472,10 @@ void Instancing::render(float delta_time)
 	{
 		return;
 	}
-	draw(delta_time);
+	ApiVulkanSample::prepare_frame();
+	update_uniform_buffers(delta_time);
+	build_command_buffer();
+	ApiVulkanSample::submit_frame();
 }
 
 void Instancing::on_update_ui_overlay(vkb::Drawer &drawer)

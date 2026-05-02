@@ -64,7 +64,6 @@ class HPPSeparateImageSampler : public HPPApiVulkanSample
 	vk::PipelineLayout      create_pipeline_layout(std::vector<vk::DescriptorSetLayout> const &descriptor_set_layouts);
 	vk::Sampler             create_sampler(vk::Filter filter);
 	vk::DescriptorSetLayout create_sampler_descriptor_set_layout();
-	void                    draw();
 	void                    generate_quad();
 	void                    load_assets();
 	void                    prepare_uniform_buffers();

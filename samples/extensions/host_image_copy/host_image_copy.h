@@ -60,7 +60,6 @@ class HostImageCopy : public ApiVulkanSample
 	void         load_assets();
 	void         destroy_texture(Texture texture);
 	void         build_command_buffer();
-	void         draw();
 	void         setup_descriptor_pool();
 	void         setup_descriptor_set_layout();
 	void         setup_descriptor_set();

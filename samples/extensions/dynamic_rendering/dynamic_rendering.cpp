@@ -333,14 +333,6 @@ void DynamicRendering::setup_framebuffer()
 	}
 }
 
-void DynamicRendering::draw()
-{
-	ApiVulkanSample::prepare_frame();
-	update_uniform_buffers();
-	build_command_buffer();
-	ApiVulkanSample::submit_frame();
-}
-
 void DynamicRendering::build_command_buffer()
 {
 	VkCommandBuffer draw_cmd_buffer = draw_cmd_buffers[current_buffer];
@@ -464,7 +456,10 @@ void DynamicRendering::render(float delta_time)
 	{
 		return;
 	}
-	draw();
+	ApiVulkanSample::prepare_frame();
+	update_uniform_buffers();
+	build_command_buffer();
+	ApiVulkanSample::submit_frame();
 }
 
 void DynamicRendering::view_changed()

@@ -160,7 +160,10 @@ void HPPSeparateImageSampler::render(float delta_time)
 {
 	if (prepared)
 	{
-		draw();
+		HPPApiVulkanSample::prepare_frame();
+		update_uniform_buffers();
+		build_command_buffer();
+		HPPApiVulkanSample::submit_frame();
 	}
 }
 
@@ -266,14 +269,6 @@ vk::DescriptorSetLayout HPPSeparateImageSampler::create_sampler_descriptor_set_l
 	vk::DescriptorSetLayoutCreateInfo descriptor_layout_create_info{.bindingCount = 1, .pBindings = &set_layout_binding_sampler};
 
 	return get_device().get_handle().createDescriptorSetLayout(descriptor_layout_create_info);
-}
-
-void HPPSeparateImageSampler::draw()
-{
-	HPPApiVulkanSample::prepare_frame();
-	update_uniform_buffers();
-	build_command_buffer();
-	HPPApiVulkanSample::submit_frame();
 }
 
 void HPPSeparateImageSampler::generate_quad()

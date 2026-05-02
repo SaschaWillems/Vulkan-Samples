@@ -49,7 +49,6 @@ class DynamicRendering : public ApiVulkanSample
 	void create_descriptor_sets();
 	void create_descriptor_pool();
 	void create_pipeline();
-	void draw();
 
 	struct
 	{
